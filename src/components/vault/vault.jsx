@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { withRouter } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
 import {
+  Grid,
   Typography,
   Accordion,
   AccordionDetails,
@@ -10,11 +11,14 @@ import {
   InputAdornment,
   FormControlLabel,
   Checkbox,
-  Tooltip
+  Tooltip,
+  MenuItem
 } from '@material-ui/core';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import SearchIcon from '@material-ui/icons/Search';
+import TimelineIcon from '@material-ui/icons/Timeline';
 import InfoIcon from '@material-ui/icons/Info';
+import HelpIcon from '@material-ui/icons/Help';
 import { withNamespaces } from 'react-i18next';
 import { colors } from '../../theme'
 
@@ -24,10 +28,12 @@ import Loader from '../loader'
 
 import {
   ERROR,
-  GET_VAULT_BALANCES,
-  VAULT_BALANCES_RETURNED,
+  GET_VAULT_BALANCES_FULL,
+  VAULT_BALANCES_FULL_RETURNED,
   DEPOSIT_VAULT_RETURNED,
   WITHDRAW_VAULT_RETURNED,
+  DEPOSIT_ALL_VAULT_RETURNED,
+  WITHDRAW_ALL_VAULT_RETURNED,
   CONNECTION_CONNECTED,
   CONNECTION_DISCONNECTED
 } from '../../constants'
@@ -134,7 +140,7 @@ const styles = theme => ({
   headingName: {
     display: 'flex',
     alignItems: 'center',
-    width: '325px',
+    width: '350px',
     [theme.breakpoints.down('sm')]: {
       width: 'auto',
       flex: 1
@@ -142,7 +148,7 @@ const styles = theme => ({
   },
   headingEarning: {
     display: 'none',
-    width: '300px',
+    width: '340px',
     [theme.breakpoints.up('sm')]: {
       display: 'block'
     }
@@ -158,6 +164,11 @@ const styles = theme => ({
     flexWrap: 'wrap',
     [theme.breakpoints.up('sm')]: {
       flexWrap: 'nowrap'
+    }
+  },
+  assetName: {
+    [theme.breakpoints.down('sm')]: {
+      fontSize: '14px'
     }
   },
   assetIcon: {
@@ -224,7 +235,15 @@ const styles = theme => ({
     borderRadius: '0.75rem',
     marginBottom: '24px',
     lineHeight: '1.2',
-    background: colors.white
+    background: colors.white,
+    '& a' : {
+      color: colors.black,
+      textDecoration: 'none',
+      fontWeight: 'bold',
+    },
+    '& a:hover' : {
+      textDecoration: 'underline',
+    },
   },
   fees: {
     paddingRight: '75px',
@@ -269,6 +288,20 @@ const styles = theme => ({
   },
   positive: {
     color: colors.compoundGreen
+  },
+  basedOnContainer: {
+    display: 'flex',
+    width: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center'
+  },
+  infoIcon: {
+    fontSize: '1em',
+    marginRight: '6px'
+  },
+  removePadding: {
+    padding: '0px',
+    maxWidth: '1040px'
   }
 });
 
@@ -278,27 +311,33 @@ class Vault extends Component {
     super()
 
     const account = store.getStore('account')
+    const basedOn = localStorage.getItem('yearn.finance-dashboard-basedon')
 
     this.state = {
       assets: store.getStore('vaultAssets'),
+      usdPrices: store.getStore('usdPrices'),
       account: account,
       address: account.address ? account.address.substring(0,6)+'...'+account.address.substring(account.address.length-4,account.address.length) : null,
       snackbarType: null,
       snackbarMessage: null,
       search: '',
       searchError: false,
-      hideZero: localStorage.getItem('yearn.finance-hideZero') === '1' ? true : false
+      hideZero: localStorage.getItem('yearn.finance-hideZero') === '1' ? true : false,
+      basedOn: basedOn ? parseInt(basedOn > 3 ? 3 : basedOn) : 1,
+      loading: true
     }
 
     if(account && account.address) {
-      dispatcher.dispatch({ type: GET_VAULT_BALANCES, content: {} })
+      dispatcher.dispatch({ type: GET_VAULT_BALANCES_FULL, content: {} })
     }
   }
   componentWillMount() {
     emitter.on(DEPOSIT_VAULT_RETURNED, this.showHash);
     emitter.on(WITHDRAW_VAULT_RETURNED, this.showHash);
+    emitter.on(DEPOSIT_ALL_VAULT_RETURNED, this.showHash);
+    emitter.on(WITHDRAW_ALL_VAULT_RETURNED, this.showHash);
     emitter.on(ERROR, this.errorReturned);
-    emitter.on(VAULT_BALANCES_RETURNED, this.balancesReturned);
+    emitter.on(VAULT_BALANCES_FULL_RETURNED, this.balancesReturned);
     emitter.on(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.on(CONNECTION_DISCONNECTED, this.connectionDisconnected);
   }
@@ -306,30 +345,33 @@ class Vault extends Component {
   componentWillUnmount() {
     emitter.removeListener(DEPOSIT_VAULT_RETURNED, this.showHash);
     emitter.removeListener(WITHDRAW_VAULT_RETURNED, this.showHash);
+    emitter.removeListener(DEPOSIT_ALL_VAULT_RETURNED, this.showHash);
+    emitter.removeListener(WITHDRAW_ALL_VAULT_RETURNED, this.showHash);
     emitter.removeListener(ERROR, this.errorReturned);
     emitter.removeListener(CONNECTION_CONNECTED, this.connectionConnected);
     emitter.removeListener(CONNECTION_DISCONNECTED, this.connectionDisconnected);
-    emitter.removeListener(VAULT_BALANCES_RETURNED, this.balancesReturned);
+    emitter.removeListener(VAULT_BALANCES_FULL_RETURNED, this.balancesReturned);
   };
 
-  refresh() {
-    dispatcher.dispatch({ type: GET_VAULT_BALANCES, content: {} })
-  }
-
   balancesReturned = (balances) => {
-    this.setState({ assets: store.getStore('vaultAssets') })
-    setTimeout(this.refresh, 300000);
+    this.setState({
+      assets: store.getStore('vaultAssets') ,
+      loading: false
+    })
   };
 
   connectionConnected = () => {
     const { t } = this.props
     const account = store.getStore('account')
+
     this.setState({
+      loading: true,
       account: account,
       address: account.address ? account.address.substring(0,6)+'...'+account.address.substring(account.address.length-4,account.address.length) : null
     })
 
-    dispatcher.dispatch({ type: GET_VAULT_BALANCES, content: {} })
+
+    dispatcher.dispatch({ type: GET_VAULT_BALANCES_FULL, content: {} })
 
     const that = this
     setTimeout(() => {
@@ -394,7 +436,9 @@ class Vault extends Component {
         <div className={ classes.investedContainer }>
           <Typography variant={'h5'} className={ classes.disaclaimer }>This project is in beta. Use at your own risk.</Typography>
           { this.renderFilters() }
+          { this.renderBasedOn() }
           { this.renderAssetBlocks() }
+          { this.renderStrategyRewards() }
         </div>
         { loading && <Loader /> }
         { snackbarMessage && this.renderSnackbar() }
@@ -415,7 +459,7 @@ class Vault extends Component {
   };
 
   renderAssetBlocks = () => {
-    const { assets, expanded, search, hideZero } = this.state
+    const { assets, expanded, search, hideZero, basedOn } = this.state
     const { classes } = this.props
     const width = window.innerWidth
 
@@ -448,51 +492,91 @@ class Vault extends Component {
                 <div className={ classes.assetIcon }>
                   <img
                     alt=""
-                    src={ require('../../assets/'+asset.symbol+'-logo.png') }
-                    height={ width > 600 ? '40px' : '30px'}
+                    src={ require('../../assets/'+asset.symbol.replace(/\+/g, '')+'-logo.png') }
+                    height={ width > 600 ? '40px' : '30px' }
                     style={asset.disabled?{filter:'grayscale(100%)'}:{}}
                   />
                 </div>
                 <div>
-                  <Typography variant={ 'h3' } noWrap>{ asset.name }</Typography>
+                  <Typography variant={ 'h3' } className={ classes.assetName } noWrap>{ asset.name }</Typography>
                   <Typography variant={ 'h5' } className={ classes.grey }>{ asset.description }</Typography>
                 </div>
               </div>
               {
-                (!['LINK'].includes(asset.id) && asset.vaultBalance > 0) &&
+                (!['LINK'].includes(asset.id) && !['GUSD'].includes(asset.id) && asset.vaultBalance > 0) &&
                 <div className={classes.headingEarning}>
-                  <Typography variant={ 'h5' } className={ classes.grey }>You are earning:</Typography>
+                  <Typography variant={ 'h5' } className={ classes.grey }>Yearly Growth:</Typography>
                   <div className={ classes.flexy }>
-                    <Typography variant={ 'h3' } noWrap>{ (asset.apy ? (asset.apy).toFixed(2) : '0.00') }% </Typography>
+                    <Typography variant={ 'h3' } noWrap>{ (this._getAPY(asset)/1).toFixed(2) }% </Typography>
                     <Typography variant={ 'h5' } className={ classes.on }> on </Typography>
-                    <Typography variant={ 'h3' } noWrap>{ (asset.vaultBalance ? (asset.vaultBalance).toFixed(2) : '0.00') } {asset.vaultSymbol}</Typography>
+                    <Typography variant={ 'h3' } noWrap>{ (asset.vaultBalance ? (Math.floor(asset.vaultBalance*asset.pricePerFullShare*10000)/10000).toFixed(2) : '0.00') } {asset.symbol}</Typography>
                   </div>
                 </div>
               }
               {
-                (!['LINK'].includes(asset.id) && asset.vaultBalance === 0) &&
+                (!['LINK'].includes(asset.id) && !['GUSD'].includes(asset.id) && asset.vaultBalance === 0) &&
                 <div className={classes.headingEarning}>
-                  <Typography variant={ 'h5' } className={ classes.grey }>This vault is earning:</Typography>
+                  <Typography variant={ 'h5' } className={ classes.grey }>Yearly Growth:</Typography>
                   <div className={ classes.flexy }>
-                    <Typography variant={ 'h3' } noWrap>{ (asset.apy ? (asset.apy).toFixed(2) : '0.00') }% </Typography>
+                    <Typography variant={ 'h3' } noWrap>{ (this._getAPY(asset)/1).toFixed(2) }% </Typography>
                   </div>
                 </div>
               }
               {
                 ['LINK'].includes(asset.id) &&
                 <div className={classes.headingEarning}>
-                  <Typography variant={ 'h5' } className={ classes.grey }>You are earning:</Typography>
+                  <Typography variant={ 'h5' } className={ classes.grey }>Yearly Growth:</Typography>
                   <Typography variant={ 'h3' } noWrap>Not Available</Typography>
                 </div>
               }
-              <div className={classes.heading}>
-                <Typography variant={ 'h5' } className={ classes.grey }>Available to deposit:</Typography>
-                <Typography variant={ 'h3' } noWrap>{ (asset.balance ? (asset.balance).toFixed(2) : '0.00')+' '+asset.symbol }</Typography>
-              </div>
+              {
+                ['GUSD'].includes(asset.id) &&
+                <div className={classes.headingEarning}>
+                  <Typography variant={ 'h5' } className={ classes.grey }>Yearly Growth:</Typography>
+                  <Typography variant={ 'h3' }  noWrap>
+                    Not Available
+                    <Tooltip title="The GUSD strategy is temporally disabled due to misleading APY calculation. It is safe to withdraw your funds, you are not charged 0.5% withdrawal fee." arrow>
+                      <InfoIcon fontSize="small" style={{ color: colors.darkGray, marginLeft: '5px', marginBottom: '-5px' }} />
+                    </Tooltip>
+                  </Typography>
+                </div>
+              }
+              { !(asset.depositDisabled === true) &&
+                <div className={classes.heading}>
+                  <Typography variant={ 'h5' } className={ classes.grey }>Available to deposit:</Typography>
+                  <Typography variant={ 'h3' } noWrap>{ (asset.balance ? (asset.balance).toFixed(2) : '0.00')+' '+asset.symbol }</Typography>
+                </div>
+              }
+
+              { asset.depositDisabled === true &&
+                <div className={classes.heading}>
+                  <Tooltip title={
+                      <React.Fragment>
+                        <Typography variant={'h5'} className={ classes.fees }>
+                          This vault is currently inactive and is not taking deposits.
+                        </Typography>
+                      </React.Fragment>
+                    } arrow>
+                  <Grid container spacing={1} direction="row" alignItems="center">
+
+
+                      <Grid item>
+                          <HelpIcon fontSize="small" className={ classes.grey } style={{ marginBottom: '-5px' }} />
+                      </Grid>
+                      <Grid item xs>
+                        <Typography variant="h5" className={ classes.grey } >
+                          Inactive
+                        </Typography>
+                      </Grid>
+                  </Grid>
+                  </Tooltip>
+                </div>
+              }
+
             </div>
           </AccordionSummary>
-          <AccordionDetails>
-            <Asset asset={ asset } startLoading={ this.startLoading } />
+          <AccordionDetails className={ classes.removePadding }>
+            <Asset asset={ asset } startLoading={ this.startLoading } basedOn={ basedOn } />
           </AccordionDetails>
         </Accordion>
       )
@@ -566,6 +650,112 @@ class Vault extends Component {
     } = this.state
     return <Snackbar type={ snackbarType } message={ snackbarMessage } open={true}/>
   };
+
+  _getAPY = (asset) => {
+    const { basedOn } = this.state
+    const initialApy = '0.00'
+
+    if(asset && asset.stats && asset.stats.apyOneWeekSample) {
+      switch (basedOn) {
+        case 1:
+          return asset.stats.apyOneWeekSample || initialApy
+        case 2:
+          return asset.stats.apyOneMonthSample || initialApy
+        case 3:
+          return asset.stats.apyInceptionSample || initialApy
+        default:
+          return asset.apy
+      }
+    } else if (asset.apy) {
+      return asset.apy
+    } else {
+      return initialApy
+    }
+  }
+
+  renderBasedOn = () => {
+
+    const { classes } = this.props
+    const { basedOn, loading } = this.state
+
+    const options = [
+      {
+        value: 1,
+        description: '1 week'
+      },
+      {
+        value: 2,
+        description: '1 month'
+      },
+      {
+        value: 3,
+        description: 'inception'
+      }
+    ]
+
+    return (
+      <div className={ classes.basedOnContainer }>
+        <InfoIcon className={ classes.infoIcon } />
+        <Typography>Growth is based on the vault's performance { basedOn === 3 ? 'since' : 'for the past' }</Typography>
+        <TextField
+          id={ 'basedOn' }
+          name={ 'basedOn' }
+          select
+          value={ basedOn }
+          onChange={ this.onSelectChange }
+          SelectProps={{
+            native: false
+          }}
+          disabled={ loading }
+          className={ classes.assetSelectRoot }
+        >
+        { options &&
+          options.map((option) => {
+            return (
+              <MenuItem key={ option.value } value={ option.value }>
+                <Typography variant='h4'>{ option.description }</Typography>
+              </MenuItem>
+            )
+          })
+        }
+      </TextField>
+      </div>
+    )
+  }
+
+  renderStrategyRewards = () => {
+
+    const { classes } = this.props
+
+    return(
+          <div className={ classes.disaclaimer } style={{ marginTop: '25px', maxWidth: '500px' }}>
+
+            <Grid container spacing={1}>
+              <Grid item><TimelineIcon fontSize="small" /></Grid>
+              <Grid item xs>
+                <Typography variant="h4" style={{ display: 'inline', fontWeight: 'bold' }}>
+                Strategy Rewards
+                </Typography>
+              </Grid>
+            </Grid>
+
+            <Typography variant="body1">
+              Yearn is only possible due to community contributions. Vault strategy contributors are rewarded with <b>0.5%</b> of yield generated by the vault. <a href="https://docs.yearn.finance/faq#what-are-the-fees" rel="noopener noreferrer" target="_blank">Learn more &rarr;</a>
+            </Typography>
+          </div>
+    )
+  }
+
+  onSelectChange = (event) => {
+    let val = []
+    val[event.target.name] = event.target.value
+    this.setState(val)
+
+    localStorage.setItem('yearn.finance-dashboard-basedon', event.target.value)
+
+    this.setState({ loading: true })
+    dispatcher.dispatch({ type: GET_VAULT_BALANCES_FULL, content: {} })
+  }
 }
 
 export default withNamespaces()(withRouter(withStyles(styles)(Vault)));

@@ -294,13 +294,19 @@ class InvestSimple extends Component {
   }
 
   balancesReturned = (balances) => {
-    this.setState({ assets: store.getStore('assets') })
+    this.setState({
+      assets: store.getStore('assets'),
+      loading: false
+    })
     setTimeout(this.refresh, 300000);
   };
 
   connectionConnected = () => {
     const { t } = this.props
-    this.setState({ account: store.getStore('account') })
+    this.setState({
+      account: store.getStore('account'),
+      loading: true
+    })
 
     dispatcher.dispatch({ type: GET_BALANCES_LIGHT, content: {} })
 
@@ -432,7 +438,7 @@ class InvestSimple extends Component {
                 <div className={ classes.assetIcon }>
                   <img
                     alt=""
-                    src={ require('../../assets/'+asset.symbol+'-logo.png') }
+                    src={ require('../../assets/'+asset.symbol.replace(/\+/g, '')+'-logo.png') }
                     height={ width > 600 ? '40px' : '30px'}
                     style={asset.disabled?{filter:'grayscale(100%)'}:{}}
                   />
@@ -447,7 +453,7 @@ class InvestSimple extends Component {
                   {
                     asset.maxApr
                       ? (asset.maxApr * 100).toFixed(4) + ' %'
-                      : 'N/A'
+                      : '0.0000 %'
                   }
                 </Typography>
                 <Typography variant={ 'h5' } className={ classes.grey }>{ t('InvestSimple.InterestRate') }</Typography>
@@ -457,7 +463,7 @@ class InvestSimple extends Component {
                   {
                     asset.balance
                       ? (asset.balance).toFixed(4) + ' ' + (asset.tokenSymbol ? asset.tokenSymbol : asset.symbol)
-                      : 'N/A'
+                      : '0.0000 ' + (asset.tokenSymbol ? asset.tokenSymbol : asset.symbol)
                   }
                 </Typography>
                 <Typography variant={ 'h5' } className={ classes.grey }>{ t('InvestSimple.AvailableBalance') }</Typography>
@@ -493,7 +499,7 @@ class InvestSimple extends Component {
                 <div className={ classes.assetIcon }>
                   <img
                     alt=""
-                    src={ require('../../assets/'+asset.symbol+'-logo.png') }
+                    src={ require('../../assets/'+asset.symbol.replace(/\+/g, '')+'-logo.png') }
                     height={ width > 600 ? '40px' : '30px'}
                     style={asset.disabled?{filter:'grayscale(100%)'}:{}}
                   />
@@ -508,7 +514,7 @@ class InvestSimple extends Component {
                   {
                     asset.maxApr
                       ? (asset.maxApr * 100).toFixed(4) + ' %'
-                      : 'N/A'
+                      : '0.0000 %'
                   }
                 </Typography>
                 <Typography variant={ 'h5' } className={ classes.grey }>{ t('InvestSimple.InterestRate') }</Typography>
@@ -518,7 +524,7 @@ class InvestSimple extends Component {
                   {
                     asset.balance
                       ? (asset.balance).toFixed(4) + ' ' + (asset.tokenSymbol ? asset.tokenSymbol : asset.symbol)
-                      : 'N/A'
+                      : '0.0000 ' + (asset.tokenSymbol ? asset.tokenSymbol : asset.symbol)
                   }
                 </Typography>
                 <Typography variant={ 'h5' } className={ classes.grey }>{ t('InvestSimple.AvailableBalance') }</Typography>
@@ -555,7 +561,7 @@ class InvestSimple extends Component {
                 <div className={ classes.assetIcon }>
                   <img
                     alt=""
-                    src={ require('../../assets/'+asset.symbol+'-logo.png') }
+                    src={ require('../../assets/'+asset.symbol.replace(/\+/g, '')+'-logo.png') }
                     height={ width > 600 ? '40px' : '30px'}
                     style={asset.disabled?{filter:'grayscale(100%)'}:{}}
                   />
@@ -570,7 +576,7 @@ class InvestSimple extends Component {
                   {
                     asset.maxApr
                       ? (asset.maxApr * 100).toFixed(4) + ' %'
-                      : 'N/A'
+                      : '0.0000 %'
                   }
                 </Typography>
                 <Typography variant={ 'h5' } className={ classes.grey }>{ t('InvestSimple.InterestRate') }</Typography>
@@ -580,7 +586,7 @@ class InvestSimple extends Component {
                   {
                     asset.balance
                       ? (asset.balance).toFixed(4) + ' ' + (asset.tokenSymbol ? asset.tokenSymbol : asset.symbol)
-                      : 'N/A'
+                      : '0.0000 ' + (asset.tokenSymbol ? asset.tokenSymbol : asset.symbol)
                   }
                 </Typography>
                 <Typography variant={ 'h5' } className={ classes.grey }>{ t('InvestSimple.AvailableBalance') }</Typography>

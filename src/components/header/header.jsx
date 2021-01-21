@@ -1,10 +1,12 @@
 import React, { Component } from 'react'
 import { withStyles } from '@material-ui/core/styles';
 import {
-  Typography
+  Typography,
+  Menu
 } from '@material-ui/core';
 import { withRouter } from "react-router-dom";
 import { colors } from '../../theme'
+import ENS from 'ethjs-ens';
 
 import {
   CONNECTION_CONNECTED,
@@ -48,16 +50,20 @@ const styles = theme => ({
     cursor: 'pointer'
   },
   links: {
-    display: 'flex'
+    display: 'flex',
+    [theme.breakpoints.down('sm')]: {
+      flexWrap: 'wrap',
+    }
   },
   link: {
     padding: '12px 0px',
     margin: '0px 12px',
     cursor: 'pointer',
+    width: 'fit-content',
     '&:hover': {
       paddingBottom: '9px',
       borderBottom: "3px solid "+colors.borderBlue,
-    },
+    }
   },
   title: {
     textTransform: 'capitalize'
@@ -68,6 +74,7 @@ const styles = theme => ({
     cursor: 'pointer',
     paddingBottom: '9px',
     borderBottom: "3px solid "+colors.borderBlue,
+    width: 'fit-content'
   },
   account: {
     display: 'flex',
@@ -92,7 +99,7 @@ const styles = theme => ({
     [theme.breakpoints.down('sm')]: {
       display: 'flex',
       position: 'absolute',
-      top: '90px',
+      transform: 'translate(0, 200%)',
       border: "1px solid "+colors.borderBlue,
       background: colors.white
     }
@@ -125,7 +132,8 @@ class Header extends Component {
 
     this.state = {
       account: store.getStore('account'),
-      modalOpen: false
+      modalOpen: false,
+      anchorEl: null
     }
   }
 
@@ -141,10 +149,27 @@ class Header extends Component {
 
   connectionConnected = () => {
     this.setState({ account: store.getStore('account') })
+    this.setAddressEnsName();
   };
 
   connectionDisconnected = () => {
     this.setState({ account: store.getStore('account') })
+  }
+
+  setAddressEnsName = async () => {
+    const context = store.getStore('web3context')
+    if(context && context.library && context.library.provider) {
+      const provider = context.library.provider
+      const account = store.getStore('account')
+      const { address } = account
+      const chainId = parseInt(provider.chainId, 16)
+      const network = chainId || provider.networkVersion
+      const ens = new ENS({ provider, network })
+      const addressEnsName = await ens.reverse(address).catch(() => {})
+      if (addressEnsName) {
+        this.setState({ addressEnsName })
+      }
+    }
   }
 
   render() {
@@ -154,6 +179,7 @@ class Header extends Component {
 
     const {
       account,
+      addressEnsName,
       modalOpen
     } = this.state
 
@@ -161,6 +187,7 @@ class Header extends Component {
     if (account.address) {
       address = account.address.substring(0,6)+'...'+account.address.substring(account.address.length-4,account.address.length)
     }
+    const addressAlias = addressEnsName || address
 
     return (
       <div className={ classes.root }>
@@ -175,16 +202,15 @@ class Header extends Component {
             <Typography variant={ 'h3'} className={ classes.name } onClick={ () => { this.nav('') } }>yearn.finance</Typography>
           </div>
           <div className={ classes.links }>
-            { this.renderLink('vaults') }
-            { this.renderLink('earn') }
-            { this.renderLink('zap') }
-            { this.renderLink('apr') }
+            { this.renderLink('dashboard') }
+            { this.renderMenuLinks({ label: 'yield', screens: ['vaults', 'earn', 'zap', 'experimental', 'stats'] }) }
+            { this.renderLink('lending') }
             { this.renderLink('cover') }
           </div>
           <div className={ classes.account }>
             { address &&
               <Typography variant={ 'h4'} className={ classes.walletAddress } noWrap onClick={this.addressClicked} >
-                { address }
+                { addressAlias }
                 <div className={ classes.connectedDot }></div>
               </Typography>
             }
@@ -197,6 +223,42 @@ class Header extends Component {
         </div>
         { modalOpen && this.renderModal() }
       </div>
+    )
+  }
+
+  handleClick = (event) => {
+    this.setState({ anchorEl: event.currentTarget });
+  }
+
+  handleClose = () => {
+    this.setState({ anchorEl: null })
+  }
+
+  renderMenuLinks = (menu) => {
+    const {
+      classes
+    } = this.props;
+
+    const currentScreen = window.location.pathname.substring(1)
+    const menuSelected = menu.screens.includes(currentScreen)
+
+    return (
+      <React.Fragment>
+        <div className={ menuSelected ? classes.linkActive : classes.link } onClick={ this.handleClick }>
+          <Typography variant={'h4'} className={ `title` }>{ menu.label }</Typography>
+        </div>
+        <Menu
+          id="simple-menu"
+          anchorEl={ this.state.anchorEl }
+          keepMounted
+          open={ Boolean(this.state.anchorEl) }
+          onClose={ this.handleClose }
+        >
+          { menu.screens.map((screen) => {
+            return this.renderLink(screen)
+          }) }
+        </Menu>
+      </React.Fragment>
     )
   }
 
@@ -213,10 +275,11 @@ class Header extends Component {
   }
 
   nav = (screen) => {
-    if(screen === 'cover') {
-      window.open("https://yinsure.finance", "_blank")
-      return
-    }
+    // if(screen === 'cover') {
+    //   window.open("https://yinsure.finance", "_blank")
+    //   return
+    // }
+    this.handleClose()
     this.props.history.push('/'+screen)
   }
 

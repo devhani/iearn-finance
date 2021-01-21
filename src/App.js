@@ -20,7 +20,12 @@ import Footer from './components/footer';
 import Home from './components/home';
 import Header from './components/header';
 import Vaults from './components/vault';
-
+import Dashboard from './components/dashboard';
+import Experimental from './components/experimental';
+import Lending from './components/lending';
+import Cover from './components/cover';
+import Firehose from './components/firehose';
+import SEO from './components/seo';
 
 import { injected } from "./stores/connectors";
 
@@ -34,7 +39,16 @@ const store = Store.store
 
 class App extends Component {
   state = {};
+  updateAccount () {
+    window.ethereum.on('accountsChanged', function (accounts) {
+      store.setStore({ account: { address: accounts[0] } })
 
+      const web3context = store.getStore('web3context')
+      if(web3context) {
+        emitter.emit(CONNECTION_CONNECTED)
+      }
+    })
+  }
   componentWillMount() {
     injected.isAuthorized().then(isAuthorized => {
       if (isAuthorized) {
@@ -42,7 +56,7 @@ class App extends Component {
         .then((a) => {
           store.setStore({ account: { address: a.account }, web3context: { library: { provider: a.provider } } })
           emitter.emit(CONNECTION_CONNECTED)
-          console.log(a)
+          // store.connectToFirehose(a.account)
         })
         .catch((e) => {
           console.log(e)
@@ -51,6 +65,14 @@ class App extends Component {
 
       }
     });
+
+    if(window.ethereum) {
+      this.updateAccount()
+    } else {
+      window.addEventListener('ethereum#initialized', this.updateAccount, {
+        once: true,
+      });
+    }
   }
 
   render() {
@@ -65,8 +87,9 @@ class App extends Component {
             alignItems: 'center',
             background: "#f9fafb"
           }}>
+            <SEO />
             <Switch>
-              <Route path="/apr">
+              <Route path="/stats">
                 <Header />
                 <APR />
               </Route>
@@ -92,6 +115,26 @@ class App extends Component {
               <Route path="/vaults">
                 <Header />
                 <Vaults />
+              </Route>
+              <Route path='/dashboard'>
+                <Header />
+                <Dashboard />
+              </Route>
+              <Route path='/experimental'>
+                <Header />
+                <Experimental />
+              </Route>
+              <Route path='/lending'>
+                <Header />
+                <Lending />
+              </Route>
+              <Route path='/cover'>
+                <Header />
+                <Cover />
+              </Route>
+              <Route path='/firehose'>
+                <Header />
+                <Firehose />
               </Route>
               <Route path="/">
                 <Home />

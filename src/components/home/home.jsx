@@ -11,7 +11,7 @@ import FlashOnIcon from '@material-ui/icons/FlashOn';
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
 import BarChartIcon from '@material-ui/icons/BarChart';
 import PieChartIcon from '@material-ui/icons/PieChart';
-import SecurityIcon from '@material-ui/icons/Security';
+import WarningIcon from '@material-ui/icons/Warning';
 
 const styles = theme => ({
   root: {
@@ -38,7 +38,6 @@ const styles = theme => ({
     transition: 'background-color 0.2s linear',
     [theme.breakpoints.up('sm')]: {
       height: '100vh',
-      minWidth: '20%',
       minHeight: '50vh',
     }
   },
@@ -155,10 +154,10 @@ const styles = theme => ({
       display: 'none'
     }
   },
-  cover: {
+  experimental: {
     backgroundColor: colors.white,
     '&:hover': {
-      backgroundColor: colors.compoundGreen,
+      backgroundColor: colors.orange,
       '& .title': {
         color: colors.white,
       },
@@ -173,10 +172,73 @@ const styles = theme => ({
       }
     },
     '& .title': {
-      color: colors.compoundGreen,
+      color: colors.orange,
     },
     '& .icon': {
-      color: colors.compoundGreen
+      color: colors.orange
+    },
+    '& .description': {
+      display: 'none'
+    }
+  },
+  lending: {
+    backgroundColor: colors.white,
+    '&:hover': {
+      backgroundColor: colors.creamBlue,
+      '& .title': {
+        color: colors.white,
+      },
+      '& .icon': {
+        color: colors.creamBlue,
+        backgroundImage: `url(${require('../../assets/cream-icon-hover.svg')})`,
+      },
+      '& .description': {
+        display: 'block',
+        color: colors.white,
+        padding: '48px',
+        textAlign: 'center'
+      }
+    },
+    '& .title': {
+      color: colors.creamBlue,
+    },
+    '& .icon': {
+      color: colors.creamBlue,
+      backgroundImage: `url(${require('../../assets/cream-icon.svg')})`,
+      backgroundSize: '100px 100px',
+      height: '100px',
+      width: '100px'      
+    },
+    '& .description': {
+      display: 'none'
+    }
+  },
+  cover: {
+    backgroundColor: colors.white,
+    '&:hover': {
+      backgroundColor: colors.coverPurple,
+      '& .title': {
+        color: colors.white,
+      },
+      '& .icon': {
+        backgroundImage: `url(${require('../../assets/cover-icon-hover.png')})`
+      },
+      '& .description': {
+        display: 'block',
+        color: colors.white,
+        padding: '48px',
+        textAlign: 'center'
+      }
+    },
+    '& .title': {
+      color: colors.coverPurple,
+    },
+    '& .icon': {
+      color: colors.coverPurple,
+      height: '100px',
+      width: '100px',
+      backgroundImage: `url(${require('../../assets/cover-icon.png')})`,
+      backgroundSize: '100px 100px'
     },
     '& .description': {
       display: 'none'
@@ -210,32 +272,49 @@ class Home extends Component {
   }
 
   render() {
-    const { classes, t, location } = this.props;
+    const { classes, t } = this.props;
 
     return (
       <div className={ classes.root }>
-        <Card className={ `${classes.card} ${classes.vault}` } onClick={ () => { this.nav(location.pathname+'vaults') }}>
+        <Card className={ `${classes.card} ${classes.apr}` } onClick={ () => { this.nav('dashboard') } }>
+          <BarChartIcon className={ `${classes.icon} icon` } />
+          <Typography variant={'h3'} className={ `${classes.title} title` }>Dashboard</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Get a quick glance at how your portfolio is growing while invested in yearn's products." }</Typography>
+        </Card>
+        <Card className={ `${classes.card} ${classes.vault}` } onClick={ () => { this.nav('vaults') }}>
           <PieChartIcon className={ `${classes.icon} icon` } />
           <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Vaults") }</Typography>
-          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Vaults follow a unique strategy that are designed to maximize the yield of the deposited asset and minimize risk." }</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Vaults follow unique strategies that are designed to maximize the yield of the deposited asset and minimize risk." }</Typography>
         </Card>
-        <Card className={ `${classes.card} ${classes.earn}` } onClick={ () => { this.nav(location.pathname+'earn') } }>
+        <Card className={ `${classes.card} ${classes.earn}` } onClick={ () => { this.nav('earn') } }>
           <AttachMoneyIcon className={ `${classes.icon} icon` } />
           <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Earn") }</Typography>
           <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Earn performs profit switching for lending providers, moving your funds between dydx, Aave, Compound autonomously." }</Typography>
         </Card>
-        <Card className={ `${classes.card} ${classes.zap}` } onClick={ () => { this.nav(location.pathname+'zap') } }>
+        <Card className={ `${classes.card} ${classes.zap}` } onClick={ () => { this.nav('zap') } }>
           <FlashOnIcon className={ `${classes.icon} icon` } />
           <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Zap") }</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Zaps help you save on gas fees. Zap directly into or out of Curve pools from the base assets." }</Typography>
         </Card>
-        <Card className={ `${classes.card} ${classes.apr}` } onClick={ () => { this.nav(location.pathname+'apr') } }>
-          <BarChartIcon className={ `${classes.icon} icon` } />
-          <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Apr") }</Typography>
+        <Card className={ `${classes.card} ${classes.experimental}` } onClick={ () => { this.nav('experimental') } }>
+          <WarningIcon className={ `${classes.icon} icon` } />
+          <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Experimental") }</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Home for experimental vaults." }</Typography>
         </Card>
-        <Card className={ `${classes.card} ${classes.cover}` } onClick={ () => { window.open("https://yinsure.finance", "_blank") } }>
-          <SecurityIcon className={ `${classes.icon} icon` } />
+        <Card className={ `${classes.card} ${classes.lending}` } onClick={ () => { this.nav('lending') } }>
+          <div alt='' className={ `${classes.icon} icon cream` } />
+          <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Lending") }</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Lending, provided by cream." }</Typography>
+        </Card>
+        <Card className={ `${classes.card} ${classes.cover}` } onClick={ () => { this.nav('cover') } }>
+          <div alt='' className={ `${classes.icon} icon cover` } />
           <Typography variant={'h3'} className={ `${classes.title} title` }>{ t("Home.Cover") }</Typography>
-          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Get cover with Nexus Mutual from yinsure.finance" }</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Cover provided by Cover Protocol." }</Typography>
+        </Card>
+        <Card className={ `${classes.card} ${classes.apr}` } onClick={ () => { this.nav('stats') } }>
+          <BarChartIcon className={ `${classes.icon} icon` } />
+          <Typography variant={'h3'} className={ `${classes.title} title` }>Stats</Typography>
+          <Typography variant={'h4'} className={ `${classes.description} description` }>{ "Get a quick glance at how yearn's vaults are performing." }</Typography>
         </Card>
       </div>
     )

@@ -22,16 +22,19 @@ export const colors = {
   darkBlue: "#2c3b57",
   blue: "#2F80ED",
   gray: "#e1e1e1",
-  lightGray: "#737373",
+  lightGray: "#ededed",
   lightBlack: "#6a6a6a",
   darkBlack: "#141414",
   green: '#1abc9c',
   red: '#ed4337',
-  orange: 'orange',
+  orange: '#ffb347',
   pink: '#DC6BE5',
   compoundGreen: '#00d395',
   tomato: '#e56b73',
   purple: '#935dff',
+  creamPurple: '#594bad',
+  creamBlue: '#69e2dc',
+  coverPurple: '#5a32c6',
 
   text: "#212529",
   lightBlue: "#2F80ED",
@@ -145,6 +148,25 @@ const iswapTheme =  {
       label: {
         textTransform: 'none',
         fontSize: '1rem'
+      }
+    },
+    MuiInput: {
+      underline: {
+        '&:before': { //underline color when textfield is inactive
+          display: 'none !important',
+          height: '0px',
+          borderBottom: 'none !important'
+        },
+        '&:after': { //underline color when textfield is inactive
+          display: 'none !important',
+          height: '0px',
+          borderBottom: 'none !important'
+        },
+        '&:hover:not($disabled):before': { //underline color when hovered
+          display: 'none !important',
+          height: '0px',
+          borderBottom: 'none !important'
+        },
       }
     },
     MuiInputBase: {
@@ -281,6 +303,11 @@ const iswapTheme =  {
         WebkitFontSmoothing: "antialiased",
         MozOsxFontSmoothing: "grayscale",
         lineHeight: 1.2
+      }
+    },
+    MuiSlider: {
+      root: {
+        color: colors.blue + ' !important'
       }
     }
   },

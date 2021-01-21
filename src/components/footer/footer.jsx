@@ -3,17 +3,12 @@ import { withRouter } from "react-router-dom";
 import { withStyles } from '@material-ui/core/styles';
 import {
   Typography,
-  Select,
-  MenuItem,
-  FormControl
 } from '@material-ui/core';
-import { withNamespaces } from 'react-i18next';
-import i18n from '../../i18n';
 import { colors } from '../../theme'
 
 import AttachMoneyIcon from '@material-ui/icons/AttachMoney';
+import BugReportIcon from '@material-ui/icons/BugReport';
 import HowToVoteIcon from '@material-ui/icons/HowToVote';
-import SecurityIcon from '@material-ui/icons/Security';
 import DescriptionIcon from '@material-ui/icons/Description';
 import MonetizationOnIcon from '@material-ui/icons/MonetizationOn';
 
@@ -22,9 +17,6 @@ import BarChartIcon from '@material-ui/icons/BarChart';
 import BuildIcon from '@material-ui/icons/Build';
 
 import BuiltWithModal from '../builtwith/builtwithModal.jsx'
-
-import Store from "../../stores";
-const store = Store.store
 
 const styles = theme => ({
   footer: {
@@ -70,6 +62,7 @@ const styles = theme => ({
   builtWith:{
     display: 'flex',
     flexDirection: 'column',
+    alignItems: 'center',
     [theme.breakpoints.down('md')]: {
       display: 'none',
     }
@@ -112,7 +105,7 @@ class Footer extends Component {
   }
 
   render() {
-    const { classes, t, location } = this.props;
+    const { classes, location } = this.props;
     const {
       modalBuiltWithOpen
     } = this.state
@@ -129,6 +122,7 @@ class Footer extends Component {
             alt=""
             src={ require('../../assets/YFI-logo.png') }
             height={ '120px' }
+            width={ '120px' }
           />
           <div  className={ `${classes.link} ${classes.builtWithLink}` } onClick={ () => { this.builtWithOverlayClicked() } } >
             <BuildIcon height='15px' className={ classes.icon } />
@@ -145,10 +139,6 @@ class Footer extends Component {
             <HowToVoteIcon height='15px' className={ classes.icon } />
             <Typography variant={ 'h4'} >ygov.finance</Typography>
           </div>
-          <div  className={ classes.link } onClick={()=> window.open("https://yinsure.finance", "_blank")} >
-            <SecurityIcon height='15px' className={ classes.icon } />
-            <Typography variant={ 'h4'} >yinsure.finance</Typography>
-          </div>
           <div  className={ classes.link } onClick={()=> window.open("https://yborrow.finance", "_blank")} >
             <MonetizationOnIcon height='15px' className={ classes.icon } />
             <Typography variant={ 'h4'} >yborrow.finance</Typography>
@@ -163,10 +153,6 @@ class Footer extends Component {
           <div  className={ classes.link } onClick={()=> window.open("https://ycosystem.info", "_blank")} >
             <DescriptionIcon height='15px' className={ classes.icon } />
             <Typography variant={ 'h4'} >ycosystem.info</Typography>
-          </div>
-          <div  className={ classes.link } onClick={()=> window.open("https://www.learnyearn.finance", "_blank")}>
-            <DescriptionIcon height='15px' className={ classes.icon } />
-            <Typography variant={ 'h4'} >learnyearn.finance</Typography>
           </div>
           <div  className={ classes.link } onClick={()=> window.open("https://stats.finance/yearn", "_blank")} >
             <BarChartIcon height='15px' className={ classes.icon } />
@@ -184,9 +170,13 @@ class Footer extends Component {
             <ForumIcon height='15px' className={ classes.icon } />
             <Typography variant={ 'h4'} >yearn.snapshot.page</Typography>
           </div>
+          <div  className={ classes.link } onClick={()=> window.open("https://vaults.finance", "_blank")} >
+            <AttachMoneyIcon height='15px' className={ classes.icon } />
+            <Typography variant={ 'h4'} >vaults.finance</Typography>
+          </div>
         </div>
         <div className={ classes.socials }>
-          <Typography className={ classes.heading } variant={ 'h6'}>Socials</Typography>
+          <Typography className={ classes.heading } variant={ 'h6'}>Resources</Typography>
           <div  className={ classes.link } onClick={()=> window.open("https://twitter.com/iearnfinance", "_blank")} >
             <img alt="" src={ require('../../assets/twitter.svg') } height='24px' className={ classes.icon } />
             <Typography variant={ 'h4'} >Twitter</Typography>
@@ -195,7 +185,7 @@ class Footer extends Component {
             <img alt="" src={ require('../../assets/medium.svg') } height='24px' className={ classes.icon } />
             <Typography variant={ 'h4'} >Medium</Typography>
           </div>
-          <div  className={ classes.link } onClick={()=> window.open("https://discord.gg/GcjxhWR", "_blank")} >
+          <div  className={ classes.link } onClick={()=> window.open("http://discord.yearn.finance", "_blank")} >
             <img alt="" src={ require('../../assets/discord.svg') } height='24px' className={ classes.icon } />
             <Typography variant={ 'h4'} >Discord</Typography>
           </div>
@@ -206,6 +196,10 @@ class Footer extends Component {
           <div  className={ classes.link } onClick={()=> window.open("https://github.com/iearn-finance", "_blank")} >
             <img alt="" src={ require('../../assets/github.svg') } height='24px' className={ classes.icon } />
             <Typography variant={ 'h4'} >Github</Typography>
+          </div>
+          <div className={ classes.link } onClick={()=> window.open("https://github.com/iearn-finance/yearn-protocol/blob/develop/SECURITY.md", "_blank")}>
+            <BugReportIcon height='24px' className={ classes.icon } />
+            <Typography variant={ 'h4'} >Security &amp; Bug Bounty</Typography>
           </div>
         </div>
         { modalBuiltWithOpen && this.renderBuiltWithModal() }
@@ -228,4 +222,4 @@ class Footer extends Component {
   }
 }
 
-export default withNamespaces()(withRouter(withStyles(styles)(Footer)));
+export default withRouter(withStyles(styles)(Footer));
